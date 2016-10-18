@@ -1,0 +1,11 @@
+{
+  "name": "mp-php-class",
+  "version": "0.0.1",
+  "description": "PHP Class profile for MP.",
+  "main": "index.js",
+  "author": "Simon Robert <srob@srob.fr>",
+  "license": "MIT",
+  "dependencies": {
+    "microparser": "^3.0.3"
+  }
+}
