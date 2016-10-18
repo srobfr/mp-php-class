@@ -2,10 +2,12 @@
   "name": "mp-php-class",
   "version": "0.0.1",
   "description": "PHP Class profile for MP.",
-  "main": "index.js",
+  "main": "PhpClass.js",
   "author": "Simon Robert <srob@srob.fr>",
   "license": "MIT",
   "dependencies": {
+    "cheerio": "^0.22.0",
+    "lodash": "^4.16.4",
     "microparser": "^3.0.3"
   }
 }
