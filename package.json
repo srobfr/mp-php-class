@@ -6,8 +6,7 @@
   "author": "Simon Robert <srob@srob.fr>",
   "license": "MIT",
   "dependencies": {
-    "cheerio": "^0.22.0",
     "lodash": "^4.16.4",
-    "microparser": "^3.0.3"
+    "microparser": "^4.*"
   }
 }

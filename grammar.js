@@ -3,11 +3,12 @@
  */
 
 var microparser = require('microparser');
-var g = microparser.xmlGrammar;
+var g = microparser.grammarHelper;
 
 var w = /^[ \t\r\n]+/;
 var lw = /^[ \t]+/;
 var ow = g.optional(w);
+var olw = g.optional(lw);
 var eof = /^$/;
 var phpBlockStart = "<?php";
 var phpBlockEnd = [ow, g.or("?>", eof)];
@@ -40,35 +41,40 @@ var staticArray = ["array", ow, parBlock];
 var staticExpr = g.or(string, numeric, valueKeyword, staticArray);
 
 // Parsing de la PHPDoc
-var docStart = g.tag("docstart", /^\/\*\*[ \t]*/);
-var docLineStart = /^(?:\n|\r|\r\n)[ \t]*\* ?/;
-var docEnd = g.tag("docend", /^(?:\n|\r|\r\n)[ \t]*\*\//);
-var docLine = [docLineStart, g.tag("content", /^.+/)];
-var docBlankLine = docLineStart;
-var docAnnotationLine = [
-    docLineStart, "@", g.tag("name", ident),
-    g.optional([lw, g.tag("desc", /^.+/)])
-];
+var docStart = g.tag("start", /^\/\*\*[ \t]*/);
+var docLinePrefix = [/^(?:\n|\r|\r\n)/, g.tag("lineprefix", /^[ \t]*\*(?!\/) ?/)];
+var docEnd = g.tag("end", /^(?:\n|\r|\r\n)?[ \t]*\*\//);
+var docLine = g.until(g.or(/^[^\*\n\r]+/, "*"), null, docEnd);
+var docBlankLines = g.multiple(docLinePrefix);
+var docOptionalBlankLines = g.optional(docBlankLines);
+
+var docLineNotAnnotation = [g.not(["@", ident]), docLine];
+
+var docAnnotationValue = g.tag("value", g.multiple(
+    docLineNotAnnotation,
+    docBlankLines
+));
 
 var docAnnotation = g.tag("annotation", [
-    docAnnotationLine,
-    g.optional(g.until(docLine, null, g.or(docAnnotationLine, docEnd)))
+    "@", g.tag("name", ident),
+    g.optional([
+        olw,
+        docAnnotationValue
+    ])
 ]);
-var docOptionalBlankLines = g.optional(g.until(docBlankLine, null, g.or(docAnnotationLine, docLine, docEnd)));
-var docDesc = g.tag("desc", [g.not(docAnnotationLine), docLine]);
-var docLongDesc = g.tag("longdesc", g.until(docLine, docOptionalBlankLines, g.or(docAnnotationLine, docEnd)));
+
+var docDesc = g.tag("desc", docLine);
+var docLongDesc = g.tag("longdesc", g.multiple(docLineNotAnnotation, docBlankLines));
+
 var doc = g.tag("doc", [
-    docStart,
-    docOptionalBlankLines,
+    docStart, docOptionalBlankLines,
+    docDesc, docOptionalBlankLines,
     g.optional([
-        docDesc,
-        docOptionalBlankLines
+        docLongDesc, docOptionalBlankLines
     ]),
-    g.optional([
-        docLongDesc,
-        docOptionalBlankLines
-    ]),
-    g.optional(g.multiple(docAnnotation, docOptionalBlankLines)),
+    g.optional(g.multiple(
+        docAnnotation, docOptionalBlankLines
+    )),
     docEnd
 ]);
 
@@ -128,6 +134,9 @@ module.exports = {
     function: func,
     method: method,
     doc: doc,
+    docLongDesc: docLongDesc,
+    docAnnotation: docAnnotation,
+    docAnnotationValue: docAnnotationValue,
     class: klass,
     file: file
 };
