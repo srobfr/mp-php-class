@@ -2,11 +2,21 @@ var grammar = require(__dirname + "/grammar.js");
 var templates = require(__dirname + "/templates.js");
 var microparser = require('microparser');
 
+/**
+ * Represents a PHPDoc annotation.
+ * @param code {string} - The initial code.
+ * @param $root - The initial DOM element.
+ * @constructor
+ */
 function PhpDocAnnotation(code, $root) {
     var that = this;
 
+    /**
+     * Sets this node code.
+     * @param code
+     */
     that.setCode = function (code) {
-        $root = microparser.parse(code, grammar.docAnnotation, ($root ? $root.$ : undefined));
+        $root = microparser.parse(code, grammar.docAnnotation);
     };
 
     that.get$root = function () {
@@ -24,21 +34,23 @@ function PhpDocAnnotation(code, $root) {
 
     ////////////////////////////////////// Name //////////////////////////////////////
     that.getName = function () {
-        return that.get$root().find(">annotation>name").text();
+        return that.get$root().find(">name").text();
     };
 
     that.setName = function (name) {
-        that.get$root().find(">annotation>name").text(name);
+        that.get$root().find(">name").text(name);
         return that;
     };
 
     ////////////////////////////////////// Value //////////////////////////////////////
     that.getValue = function () {
-        return that.get$root().find(">annotation>value").text();
+        var $valueClone = that.get$root().find(">value").clone();
+        $valueClone.find(">lineprefix").remove();
+        return $valueClone.text();
     };
 
     that.setValue = function (value) {
-        var $value = that.get$root().find(">annotation>value");
+        var $value = that.get$root().find(">value");
 
         // Suppression
         if (!value) {
@@ -47,7 +59,7 @@ function PhpDocAnnotation(code, $root) {
         }
 
         var prefixedValue = value.replace(/\n/g, "\n * ");
-        var $newValue = microparser.parse(prefixedValue, grammar.docAnnotationValue, $root.$).find(">value");
+        var $newValue = microparser.parse(prefixedValue, grammar.docAnnotationValue);
 
         // Création
         if(!$value.length) {
@@ -61,7 +73,7 @@ function PhpDocAnnotation(code, $root) {
     };
 
     function createValue($newValue) {
-        that.get$root().find(">annotation>name").after([" ", $newValue]);
+        that.get$root().find(">name").after([" ", $newValue]);
     }
 
     function deleteValue($value) {

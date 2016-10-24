@@ -1,7 +1,7 @@
 var PhpDocAnnotation = require(__dirname + "/../PhpDocAnnotation.js");
 
 var code = `@param $img is an image id from the gallery or a http url.
- * This annotation is multiline.`;
+    * This annotation is multiline.`;
 
 var annotation = new PhpDocAnnotation(code);
 console.log(annotation.get$root().xml());

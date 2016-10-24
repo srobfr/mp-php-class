@@ -16,5 +16,5 @@ var myClass = new PhpClass(code);
 
 console.log(myClass.getName());
 myClass.setName("Foo");
-console.log(myClass.$.xml());
+console.log(myClass.get$root().xml());
 console.log(myClass.getCode());

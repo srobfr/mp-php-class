@@ -25,16 +25,16 @@ var fullIdent = g.multiple(ident, "\\");
 var valueKeyword = g.or("null", "NULL", "true", "TRUE", "false", "FALSE");
 var visibility = g.tag("visibility", g.or("private", "public", "protected"));
 var abstract = g.tag("abstract", "abstract");
-var static = g.tag("static", "static");
+var static_ = g.tag("static", "static");
 var final = g.tag("final", "final");
-var marker = g.or(visibility, abstract, static, final);
+var marker = g.or(visibility, abstract, static_, final);
 
 var _parBlock = [];
 var parBlockItem = g.or(_parBlock, /^[^\(\)]+/);
 var parBlock = ["(", g.optional(g.multiple(parBlockItem)), ")"];
 _parBlock.push(parBlock);
 
-var variable = ["$", g.tag("name", ident)];
+var variable = g.tag("variable", ["$", g.tag("name", ident)]);
 
 var staticArray = ["array", ow, parBlock];
 
@@ -137,6 +137,8 @@ module.exports = {
     docLongDesc: docLongDesc,
     docAnnotation: docAnnotation,
     docAnnotationValue: docAnnotationValue,
+    visibility: visibility,
+    static: static_,
     class: klass,
     file: file
 };
