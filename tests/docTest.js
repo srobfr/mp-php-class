@@ -193,4 +193,44 @@ describe('PhpDoc', function () {
  */`);
         });
     });
+    describe('#removeAnnotation()', function () {
+        it('should remove an annotation from init code', function () {
+            var doc = new PhpDoc(`/**
+ * TODO
+ *
+ * @foo Bar 0.
+ * @foo Foo 1.
+ * @foo Baz 2.
+ * @plop Plop 3.
+ */`);
+            var annotations = doc.getAnnotations();
+            doc.removeAnnotation(annotations[2]);
+            assert.equal(doc.getCode(), `/**
+ * TODO
+ *
+ * @foo Bar 0.
+ * @foo Foo 1.
+ *
+ * @plop Plop 3.
+ */`);
+            doc.removeAnnotation(annotations[0]);
+            assert.equal(doc.getCode(), `/**
+ * TODO
+ *
+ * @foo Foo 1.
+ *
+ * @plop Plop 3.
+ */`);
+            doc.removeAnnotation(annotations[1]);
+            assert.equal(doc.getCode(), `/**
+ * TODO
+ *
+ * @plop Plop 3.
+ */`);
+            doc.removeAnnotation(annotations[3]);
+            assert.equal(doc.getCode(), `/**
+ * TODO
+ */`);
+        });
+    });
 });

@@ -13,8 +13,8 @@ var eof = /^$/;
 var phpBlockStart = "<?php";
 var phpBlockEnd = [ow, g.or("?>", eof)];
 
-var commentBlock = /^\/\*[.\n\r]*\*\//; // TODO Gérer les commentaires
-var commentLine = /^\/\/.*(?:\n|\r|\r\n)/; // TODO Gérer les commentaires
+var commentBlock = /^\/\*[.\n\r]*\*\//; // TODO Handle comments blocks
+var commentLine = /^\/\/.*(?:\n|\r|\r\n)/; // TODO Handle comments lines
 
 var quotedString = /^'(\\'|[^']+)*'/;
 var doubleQuotedString = /^"(\\"|[^"]+)*"/;
@@ -78,27 +78,37 @@ var doc = g.tag("doc", [
     docEnd
 ]);
 
-var defaultValue = [ow, "=", ow, g.tag("value", staticExpr)];
+var value = g.tag("value", staticExpr);
+var defaultValue = [ow, "=", ow, value];
+
+var type = g.tag("type", fullIdent);
 
 var funcArg = g.tag("arg", [
-    g.optional([g.tag("type", fullIdent), w]),
+    g.optional([type, w]),
     variable,
     g.optional(defaultValue)
 ]);
-var funcArgs = g.tag("args", ["(", ow, g.optional([g.multiple(funcArg, [ow, ",", ow]), ow]), ")"]);
+var funcArgs = g.tag("args", g.optional([g.multiple(funcArg, [ow, ",", ow]), ow]));
 
 var _curBlock = [];
 var curBlockItem = g.or(_curBlock, /^[^{}]+/);
 var curBlock = ["{", g.optional(g.multiple(curBlockItem)), "}"];
 _curBlock.push(curBlock);
 
-var funcBody = g.tag("body", g.or(
-    ";",
-    ["{", g.tag("content", g.optional(g.multiple(curBlockItem))), "}"]
-));
-var func = ["function", w, g.tag("name", ident), ow, funcArgs, ow, funcBody];
+var funcBodyEnd = [ow, "}"];
+var funcImplementationPart = g.or(curBlock, /^[^{} \t\r\n]+/, w);
+var funcImplementation = g.tag("implementation", g.until(funcImplementationPart, undefined, funcBodyEnd));
 
-var constant = g.tag("constant", [g.optional([doc, ow]), "const", w, g.tag("name", ident), defaultValue, ow, ";"]);
+var funcBody = g.tag("body", [
+    ow,
+    g.or(
+        ";",
+        ["{", ow, funcImplementation, funcBodyEnd]
+    )
+]);
+var func = [g.tag("function", "function"), w, g.tag("name", ident), ow, "(", ow, funcArgs, ow, ")", funcBody];
+
+var constant = g.tag("constant", [g.optional([doc, ow]), g.tag("const", "const"), w, g.tag("name", ident), defaultValue, ow, ";"]);
 var property = g.tag("property", [g.optional([doc, ow]), g.optional([g.multiple(marker, w), w]), variable, g.optional(defaultValue), ow, ";"]);
 
 var method = g.tag("method", [g.optional([doc, ow]), g.optional([g.multiple(marker, w), w]), func]);
@@ -131,14 +141,20 @@ var file = [
 module.exports = {
     variable: variable,
     property: property,
+    constant: constant,
     function: func,
     method: method,
+    funcArg: funcArg,
+    funcImplementation: funcImplementation,
+    type: type,
     doc: doc,
     docLongDesc: docLongDesc,
     docAnnotation: docAnnotation,
     docAnnotationValue: docAnnotationValue,
     visibility: visibility,
     static: static_,
+    abstract: abstract,
+    value: value,
     class: klass,
     file: file
 };

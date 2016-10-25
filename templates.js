@@ -16,14 +16,39 @@ var doc = `/**
  */
 var docAnnotation = `@todo`;
 
+/**
+ * PHP class property.
+ * @type {string}
+ */
 var property = `private $todo;`;
+
+/**
+ * PHP function argument.
+ * @type {string}
+ */
+var funcArg= `$todo`;
+
+/**
+ * PHP class constant.
+ * @type {string}
+ */
+var constant = `const TODO = null;`;
+
+/**
+ * PHP method.
+ * @type {string}
+ */
+var method = `public function todo()
+{
+    // TODO
+}`;
 
 /**
  * PHP Class.
  * @type {string}
  * @private
  */
-var class_ = `class TODO
+var class_ = `class Todo
 {
 
 }`;
@@ -47,5 +72,8 @@ module.exports = {
     docAnnotation: docAnnotation,
     class: class_,
     property: property,
+    funcArg: funcArg,
+    constant: constant,
+    method: method,
     file: file
 };

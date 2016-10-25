@@ -1,5 +1,6 @@
 var grammar = require(__dirname + "/grammar.js");
 var templates = require(__dirname + "/templates.js");
+var PhpDoc = require(__dirname + "/PhpDoc.js");
 var microparser = require('microparser');
 
 /**
@@ -71,7 +72,7 @@ function PhpProperty(code, $root) {
     };
 
     function createVisibility($newVisibility) {
-        that.get$root().find(">variable,>static,>abstract").first().before([
+        that.get$root().find(">variable,>static").first().before([
             $newVisibility, " "
         ]);
     }
@@ -105,7 +106,83 @@ function PhpProperty(code, $root) {
     };
 
     function createStatic($newStatic) {
-        that.get$root().find(">variable,>abstract").first().before([$newStatic, " "]);
+        that.get$root().find(">variable").first().before([$newStatic, " "]);
+    }
+
+    ////////////////////////////////////// PhpDoc //////////////////////////////////////
+    that.getDoc = function () {
+        var $doc = that.get$root().find(">doc");
+        if (!$doc.length) return null;
+        return new PhpDoc(undefined, $doc);
+    };
+
+    that.setDoc = function(doc) {
+        var $doc = that.get$root().find(">doc");
+
+        // Removal
+        if (!doc) {
+            if($doc.length) deleteDoc($doc);
+            return that;
+        }
+
+        var $newDoc = doc.get$root();
+
+        // Creation
+        if(!$doc.length) {
+            createDoc($newDoc);
+            return that;
+        }
+
+        // Update
+        $doc.replaceWith($newDoc);
+        return that;
+    };
+
+    function deleteDoc($doc) {
+        $doc.removeNextText();
+        $doc.remove();
+    }
+
+    function createDoc($newDoc) {
+        that.get$root().find(">visibility,>static,>variable").first().before([$newDoc, "\n"]);
+    }
+
+    ////////////////////////////////////// Value //////////////////////////////////////
+    that.getValue = function () {
+        var $value = that.get$root().find(">value");
+        if (!$value.length) return null;
+        return $value.text();
+    };
+
+    that.setValue = function(value) {
+        var $value = that.get$root().find(">value");
+
+        // Removal
+        if (!value) {
+            if($value.length) deleteValue($value);
+            return that;
+        }
+
+        var $newValue = microparser.parse(value, grammar.value);
+
+        // Creation
+        if(!$value.length) {
+            createValue($newValue);
+            return that;
+        }
+
+        // Update
+        $value.replaceWith($newValue);
+        return that;
+    };
+
+    function createValue($newValue) {
+        that.get$root().find(">variable").after([" = ", $newValue]);
+    }
+
+    function deleteValue($value) {
+        $value.removePreviousText();
+        $value.remove();
     }
 
     ////////////////////////////////////// Initialization //////////////////////////////////////

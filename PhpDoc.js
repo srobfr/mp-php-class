@@ -109,7 +109,7 @@ function PhpDoc(code, $root) {
 
         // We look for the previous node.
         var $previousNode = null;
-        if (previousAnnotation === null || $annotations.length === 0) $previousNode = $root.find(">desc,longdesc").last(); // First annotation
+        if (previousAnnotation === null || $annotations.length === 0) $previousNode = $root.find(">desc,longdesc").eq(-1); // First annotation
         else if (previousAnnotation !== undefined) $previousNode = previousAnnotation.get$root(); // After the given annotation
         else {
             // We have to find the previous annotation.
@@ -128,29 +128,44 @@ function PhpDoc(code, $root) {
             });
 
             if (index > 0) $previousNode = $(sortedAnnotationsNodes[index - 1]);
-            else $previousNode = $root.find(">desc,longdesc").last();
+            else $previousNode = $root.find(">desc,longdesc").eq(-1);
         }
 
         // We guess the required prefix string.
-        var prefix = ["\n", $('<lineprefix/>').text(" * ")];
-        if ($previousNode[0].tagName !== "annotation" || $previousNode.find(">name").text() !== annotation.get$root().find(">name").text()) {
-            prefix.unshift("\n", $('<lineprefix/>').text(" *"));
-        }
+        var prefix = getAnnotationsSeparator($previousNode, annotation.get$root());
 
         // We guess the required suffix string.
-        var suffix = [];
         var $nextNode = $previousNode.nextAll(":not(lineprefix)").eq(0);
-        if($nextNode.length && $nextNode[0].tagName !== "end") {
+        var suffix = getAnnotationsSeparator(annotation.get$root(), $nextNode);;
+        if($nextNode.length && !$nextNode.is("end")) {
             $nextNode.prevUntil(":not(lineprefix)").remove();
             $nextNode.removePreviousText();
-
-            suffix.unshift("\n", $('<lineprefix/>').text(" * "));
-            if ($nextNode[0].tagName !== "annotation" || $nextNode.find(">name").text() !== annotation.get$root().find(">name").text()) {
-                suffix.unshift("\n", $('<lineprefix/>').text(" *"));
-            }
         }
 
         $previousNode.after(_.flatten([prefix, annotation.get$root(), suffix]));
+        return that;
+    };
+
+    function getAnnotationsSeparator($previous, $next) {
+        var r = [];
+        if (!$previous.length || !$next.length || $next.is("end")) return r; // First or last node.
+        r.unshift("\n", $('<lineprefix/>').text(" * "));
+        if ($next[0].tagName !== $previous[0].tagName || $next.find(">name").text() !== $previous.find(">name").text()) {
+            r.unshift("\n", $('<lineprefix/>').text(" *"));
+        }
+        return r;
+    }
+
+    that.removeAnnotation = function (annotation) {
+        var $annotation = annotation.get$root();
+        var $previous = $annotation.prevAll(":not(lineprefix)").eq(0);
+        var $next = $annotation.nextAll(":not(lineprefix)").eq(0);
+        $annotation.prevUntil($previous).remove();
+        $annotation.removePreviousText();
+        $annotation.nextUntil($next).remove();
+        $annotation.removeNextText();
+        $annotation.before(getAnnotationsSeparator($previous, $next));
+        $annotation.remove();
     };
 
     ////////////////////////////////////// Initialization //////////////////////////////////////
