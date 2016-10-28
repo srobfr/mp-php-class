@@ -1,5 +1,4 @@
 var PhpClass = require(__dirname + "/../PhpClass.js");
-var PhpClass = require(__dirname + "/../PhpClass.js");
 var PhpFunctionArgument = require(__dirname + "/../PhpFunctionArgument.js");
 var PhpDoc = require(__dirname + "/../PhpDoc.js");
 var assert = require('assert');
@@ -56,5 +55,33 @@ describe('PhpClass', function() {
             assert.equal(phpClass.getCode(), `class Foo {}`);
         });
     });
+
+    describe('#getKind()', function() {
+        it('should return default kind', function() {
+            var phpClass = new PhpClass();
+            assert.equal(phpClass.getKind(), "class");
+        });
+        it('should return kind from init code', function() {
+            var phpClass = new PhpClass("interface Foo {}");
+            assert.equal(phpClass.getKind(), "interface");
+        });
+    });
+
+    describe('#setKind()', function() {
+        it('should modify default kind', function() {
+            var phpClass = new PhpClass();
+            phpClass.setKind("interface");
+            assert.equal(phpClass.getCode(), `interface Todo
+{
+
+}`);
+        });
+        it('should modify kind from init code', function() {
+            var phpClass = new PhpClass(`interface Foo {}`);
+            phpClass.setKind("class");
+            assert.equal(phpClass.getCode(), `class Foo {}`);
+        });
+    });
+
 
 });

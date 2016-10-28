@@ -46,6 +46,16 @@ function PhpClass(code, $root) {
         return that;
     };
 
+    ////////////////////////////////////// Kind //////////////////////////////////////
+    that.getKind = function () {
+        return that.get$root().find(">kind").text();
+    };
+
+    that.setKind = function (kind) {
+        that.get$root().find(">kind").text(kind);
+        return that;
+    };
+
     ////////////////////////////////////// Abstract //////////////////////////////////////
     that.isAbstract = function () {
         return (that.get$root().find(">abstract").length > 0);
